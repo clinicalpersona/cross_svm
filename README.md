@@ -1,7 +1,7 @@
 cross_svm
 =========
 
-cross_svm is a version of the SVM machine learning library libsvm
+cross_svm is a version of the SVM machine learning library _libsvm_
 which unlocks and enhances the hidden (or at least less-well known)
 power of libsvm. It can run libsvm cross-validation 10-20 times faster
 than "plain" libsvm command line, on many datasets. It can also run
