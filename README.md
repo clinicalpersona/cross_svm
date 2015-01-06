@@ -73,7 +73,7 @@ Comparison of execution times
 
 Figs. 1-2 compare execution times for standard libsvm and liblinear
 command lines (i.e., not using the _-t 4_ precomputed kernel option)
-vs. cross_svm.
+vs. cross_svm. We used default values of cost and kernel parameters.
 
 CCv1.1 is cancer genomics dataset, with 4 classes, 22215 genomic
 features and 484 samples.
@@ -86,8 +86,8 @@ GSE6532 is cancer genomics dataset with 2 classes, 44754 features and
 
 The other datasets are from UCI repository.
 
-Note that cross_svm is also much faster than liblinear on the three
-genomic datasets that we tested.
+Note that cross_svm with linear kernel is also much faster than
+liblinear on the three genomic datasets that we tested.
 
 
 Compiling cross_svm
@@ -115,8 +115,8 @@ to get Usage message. The new switches are:
 ```
 Both switches are optional.
 
-The key enhancement is the _u 1_ switch. It is useful in
-cross-validation (-v mode). With _u 1_, cross_svm will compute each
+The key enhancement is the _-u 1_ switch. It is useful in
+cross-validation (_-v_ mode). With _-u 1_, cross_svm will compute each
 kernel matrix element exactly once, when needed to perform
 cross-validation. In contrast, libsvm computes kernel matrix elements
 multiple times. As already suggested, _-u 1_ provides the bulk of
@@ -149,9 +149,9 @@ $ java -cp libsvm.jar svm_train -t 2 -v 10 gisette_scale                   # 222
 Suggested workflow
 ------------------
 
-This workflow assumes cross-validation (-v command-line argument).
+This workflow assumes cross-validation (_-v_ command-line argument).
 
-1. Run cross_svm with -u 1 command-line argument
+1. Run cross_svm with _-u 1_ command-line argument
 
 2. Run libsvm 
 
