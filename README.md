@@ -128,13 +128,13 @@ analyze a 100,000-sample dataset, and about 1TB RAM to analyze a
 500,000-sample dataset. The largest dataset we analyzed had 72,309
 samples.
 
-Specifying _-f 1_ is useful if the full dataset (i.e., data with all
-elements, not just non-zero) fits in RAM.  In our experience, in those
-cases _-f 1_ improves performance by a factor of 2 to 3. It tells
-cross_svm to use more efficient kernel computation, due to the _full_
-representation of the dataset.  For compatibility with libsvm, by
-default all data files are considered sparse, so you need to
-explicitly state _-f 1_ to gain performance.
+Specifying _-f 1_ is useful if the dataset isn't too sparse, and the
+full dataset (i.e., data with all elements, not just non-zero) fits in
+RAM.  In our experience, in those cases _-f 1_ improves performance by
+a factor of 2 to 3. It tells cross_svm to use more efficient kernel
+computation, due to the _full_ representation of the dataset.  For
+compatibility with libsvm, by default all data files are considered
+sparse, so you need to explicitly state _-f 1_ to gain performance.
 
 Examples:
 ```
