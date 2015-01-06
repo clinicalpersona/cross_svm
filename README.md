@@ -137,7 +137,6 @@ default all data files are considered sparse, so you need to
 explicitly state _-f 1_ to gain performance.
 
 Examples:
-gain):
 ```
 $ java -cp cross_svm.jar svm_train -t 2 -v 10 -u 1 -f 1 codv1.1.libsvm     # 17 sec
 $ java -cp libsvm.jar svm_train -t 2 -v 10 codv1.1.libsvm                  # 638 sec
