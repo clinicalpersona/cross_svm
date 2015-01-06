@@ -27,10 +27,11 @@ following disadvantages:
 - it requires external software for translating your source file data
   to libsvm kernel format
 
-- it generates an intermediate file
+- it generates an intermediate file, which requires storage/backup,
+  may become corrupted or moved, etc.
 
 - it requires two steps (commands), complicating the overall machine
-  learning workflow
+  learning workflow due to exception handling
 
 - there is no convenient API for using the kernel matrix for users who
   wish to embed libsvm in their code
@@ -70,7 +71,9 @@ of libsvm file svm.java, which contains the main SVM learning code.
 Comparison of execution times
 -----------------------------
 
-Figs. 1-2 compare execution times for standard libsvm vs. cross_svm.
+Figs. 1-2 compare execution times for standard libsvm and liblinear
+command lines (i.e., not using the _-t 4_ precomputed kernel option)
+vs. cross_svm.
 
 CCv1.1 is cancer genomics dataset, with 4 classes, 22215 genomic
 features and 484 samples.
@@ -112,41 +115,41 @@ to get Usage message. The new switches are:
 ```
 Both switches are optional.
 
-Specifying -f 1 is useful if the full dataset (i.e., data with all
-elements, not just non-zero) fits in RAM.  In our experience, in those
-cases -f 1 improves performance by a factor of 2 to 3. It tells
-cross_svm to use more efficient kernel computation, due to the _full_
-representation of the dataset.  For compatibility with libsvm, by
-default all data files are considered sparse, so you need to
-explicitly state -f 1 to gain performance.
-
-Specifying -u 1 is useful in cross-validation (-v mode). It means that
-cross_svm will compute each kernel matrix element exactly once, when
-needed to perform cross-validation. In contrast, libsvm computes
-kernel matrix elements multiple times. -u 1 provides the bulk of
+The key enhancement is the _u 1_ switch. It is useful in
+cross-validation (-v mode). With _u 1_, cross_svm will compute each
+kernel matrix element exactly once, when needed to perform
+cross-validation. In contrast, libsvm computes kernel matrix elements
+multiple times. As already suggested, _-u 1_ provides the bulk of
 performance gains shown in the graphs below. The trade-off is that
 kernel matrix must fit in the computer RAM. Given that the matrix is
 symmetric, it consumes about 4\*N\*(N+1) bytes, where N is number of
 samples in the training set. For example, you need about 40G RAM to
-analyze a 100K-sample dataset, and about 1TB to analyze a 500K-sample
-dataset. The largest dataset we analyzed had 72,309 samples.
+analyze a 100,000-sample dataset, and about 1TB RAM to analyze a
+500,000-sample dataset. The largest dataset we analyzed had 72,309
+samples.
 
-Examples (-u 1 means use the fast cross-validation; -f 1 means convert
-the input file to full format upon reading, for additional performance
+Specifying _-f 1_ is useful if the full dataset (i.e., data with all
+elements, not just non-zero) fits in RAM.  In our experience, in those
+cases _-f 1_ improves performance by a factor of 2 to 3. It tells
+cross_svm to use more efficient kernel computation, due to the _full_
+representation of the dataset.  For compatibility with libsvm, by
+default all data files are considered sparse, so you need to
+explicitly state _-f 1_ to gain performance.
+
+Examples:
 gain):
 ```
 $ java -cp cross_svm.jar svm_train -t 2 -v 10 -u 1 -f 1 codv1.1.libsvm     # 17 sec
-$ java -cp libsvm.jar svm_train -t 2 -v 10 codv1.1.libsvm                # 638 sec
+$ java -cp libsvm.jar svm_train -t 2 -v 10 codv1.1.libsvm                  # 638 sec
 
 $ java -cp cross_svm.jar svm_train -t 2 -v 10 -u 1 -f 1 gisette_scale      # 68 sec
-$ java -cp libsvm.jar svm_train -t 2 -v 10 gisette_scale                 # 2223 sec
+$ java -cp libsvm.jar svm_train -t 2 -v 10 gisette_scale                   # 2223 sec
 ```
+
 Suggested workflow
 ------------------
 
-As a reminder, cross_svm is useful in cross-validation mode. Therefore
-this workflow assumes you are running cross-validation (-v
-command-line argument).
+This workflow assumes cross-validation (-v command-line argument).
 
 1. Run cross_svm with -u 1 command-line argument
 
@@ -154,11 +157,12 @@ command-line argument).
 
 3. Run liblinear
 
-4. Choose the fastest among cross_svm, libsvm, liblinear
+4. Choose the fastest among cross_svm, libsvm, liblinear and continue
+learning with it
 
 5. If cross_svm is the fastest, and the _full_ data file fits in RAM
-(i.e., N*f values (where f is number of features) fit in RAM),
-continue running cross_svm with `-u 1 -f 1' command-line options.
+(i.e., N*f doubles, where f is number of features, fit in RAM),
+continue running cross_svm with _-u 1 -f 1_ command-line options.
 
 
 Performance graphs
@@ -166,15 +170,16 @@ Performance graphs
 
 ![alt tag](https://github.com/clinicalpersona/cross_svm/raw/master/cross_svm_performance.png)
 
-Figure 1. cross_svm performance speedup using non-linear kernels. The
-x-axis is the dataset/kernel combination, y-axis is the speedup factor
+Figure 1. Speed comparison between cross_svm and standard libsvm
+command line, using non-linear kernels. The x-axis is the
+dataset/kernel combination, y-axis is the cross_svm speedup factor
 compared with libsvm. The numbers on top of bars are density of the
 dataset (the proportion of non-zero elements in the data matrix). The
-horizontal red line is speedup factor of 1.
+horizontal red line corresponds to speedup factor of 1.
 
 ![alt tag](https://github.com/clinicalpersona/cross_svm/raw/master/cross_svm_liblinear.png)
 
-Figure 2. Speed comparison between cross_svm and liblinear. The x-axis
-is the dataset, y-axis is the execution time in seconds.  The numbers
-on top of bars are density of the dataset (the proportion of non-zero
-elements in the data matrix).
+Figure 2. Speed comparison between cross_svm and standard liblinear
+command line. The x-axis is the dataset, y-axis is the execution time
+in seconds.  The numbers on top of bars are density of the dataset
+(the proportion of non-zero elements in the data matrix).
