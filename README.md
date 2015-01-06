@@ -3,26 +3,42 @@ cross_svm
 
 cross_svm is a version of the SVM machine learning library _libsvm_
 which unlocks and enhances the hidden (or at least less-well known)
-power of libsvm. It can run libsvm cross-validation 10-20 times faster
-than "plain" libsvm command line, on many datasets. It can also run
-2-3 times faster than libsvm in ordinary learning mode (not
-cross-validation).
+power of libsvm. It runs cross-validation 10-20 times faster than
+"plain" libsvm command line, on many datasets. It also runs 2-3 times
+faster than libsvm in ordinary learning mode (not cross-validation).
 
 
-Introduction
-------------
+Background
+----------
 
-cross_svm is a faster and backward-compatible Java version of the
-well-known libsvm library for Support Vector Machines. It performs
-cross-validation learning much faster than libsvm - depending on the
-sparsity of input data, often more than order of magnitude
-faster. This is achieved by utilizing the power of the libsvm
-_precomputed kernel_ command-line option _-t 4_. In this mode, libsvm
-takes as input a precomputed kernel matrix instead of the input data
-file. That way, there is no need for repeated computations of the
-kernel matrix elements, as is otherwise done in the `regular' libsvm
-command line. This may lead to dramatic performance gains for many
-datasets, with the tradeoff that entire kernel matrix must fit in RAM.
+To save memory, libsvm does not store kernel matrix in RAM, but
+instead re-computes kernel matrix elements as needed. Depending on
+dataset, this can consume a majority of the total computation time,
+particularly in cross-validation mode. To alleviate this, libsvm
+offers _libsvm -t 4_ option, which allows the user to supply the
+pre-computed kernel matrix in a special libsvm kernel format. In this
+mode, the matrix is read once, stored in memory, and subsequently used
+as needed by the optimization algorithm. However, this has the
+following disadvantages:
+
+- the _-t 4_ option is relatively obscure. Few users understand
+  how/when/why use it
+
+- it requires external software for translating your source file data
+  to libsvm kernel format
+
+- it generates an intermediate file
+
+- it requires two steps (commands)
+
+- there is no convenient API for using the kernel matrix in case you
+  are embedding libsvm in your code
+
+To resolve these issues, and provide certain additional enhancement,
+we created cross_svm. We believe it maximizes and enhances the libsvm
+potential. cross_svm integrates _-t 4_ inside the libsvm code. Thus,
+the user does not have to create kernel matrix file externally, but
+instead continues to provide the same simple command line, with
 
 The cross_svm code is based on libsvm version 3-17. The learning
 algorithm is exactly the same. The speedup is achieved by keeping
