@@ -104,7 +104,7 @@ Using cross_svm
 ---------------
 
 cross_svm is backward-compatible with libsvm 3-17. The only change are
-two new command-line switches, -u and -f. Type
+two new command-line switches, _-u_ and _-f_. Type
 ```
 $ java -cp cross_svm.jar svm_train
 ```
