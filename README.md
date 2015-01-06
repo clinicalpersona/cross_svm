@@ -18,8 +18,8 @@ particularly in cross-validation mode. To alleviate this, libsvm
 offers _libsvm -t 4_ option, which allows the user to supply the
 pre-computed kernel matrix in a special libsvm kernel format. In this
 mode, the matrix is read once, stored in memory, and subsequently used
-as needed by the optimization algorithm. However, this has the
-following disadvantages:
+as needed by the optimization algorithm. However, this has a number of
+disadvantages:
 
 - the _-t 4_ option is relatively obscure. Few users understand
   how/when/why use it
