@@ -1,13 +1,12 @@
 cross_svm
 =========
 
-<<<<<<< HEAD
-cross_svm unlocks and enhances the hidden (or at least less-well
-known) power of libsvm library. With cross_svm, SVM cross-validation
-learning is at least 10-20 times faster than the "standard" libsvm
-command-line, on many dense datasets. In addition to the
-cross-validation improvement, it implements additional speed-ups which
-often provide 2-3 fold performance gain.
+cross_svm is a version of the SVM machine learning library libsvm
+which unlocks and enhances the hidden (or at least less-well known)
+power of libsvm. It can run libsvm cross-validation 10-20 times faster
+than "plain" libsvm command line, on many datasets. It can also run
+2-3 times faster than libsvm in ordinary learning mode (not
+cross-validation).
 
 
 Introduction
@@ -153,6 +152,3 @@ Figure 2. Speed comparison between cross_svm and liblinear. The x-axis
 is the dataset, y-axis is the execution time in seconds.  The numbers
 on top of bars are density of the dataset (the proportion of non-zero
 elements in the data matrix).
-=======
-faster and simpler version of SVM learning software libsvm
->>>>>>> 7f5dd3f6c3f4b3349ce7453f1ea5f6f195a84f23
