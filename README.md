@@ -29,20 +29,30 @@ following disadvantages:
 
 - it generates an intermediate file
 
-- it requires two steps (commands)
+- it requires two steps (commands), complicating the overall machine
+  learning workflow
 
-- there is no convenient API for using the kernel matrix in case you
-  are embedding libsvm in your code
+- there is no convenient API for using the kernel matrix for users who
+  wish to embed libsvm in their code
 
-To resolve these issues, and provide certain additional enhancement,
-we created cross_svm. We believe it maximizes and enhances the libsvm
-potential. cross_svm integrates _-t 4_ inside the libsvm code. Thus,
-the user does not have to create kernel matrix file externally, but
-instead continues to provide the same simple command line, with
+To resolve these issues, and provide certain additional enhancements,
+we created Java library cross_svm. We believe it maximizes and
+enhances the libsvm potential. In essence, cross_svm integrates and
+automates the _-t 4_ kernel matrix computation inside the SVM learning
+software. Thus, the user does not have to create kernel matrix file
+externally, nor even know about the kernel matrix. User continues to
+provide the same simple command line, with input data file, and the
+cross_svm software automatically computes kernel matrix, and delivers
+major performance gains.
+
+Additionally, cross_svm improves (simplifies) libsvm internal data
+structures. This enhancement alone achieves 2-3 fold speedup on many
+datasets. 
 
 The cross_svm code is based on libsvm version 3-17. The learning
-algorithm is exactly the same. The speedup is achieved by keeping
-kernel in RAM and rearranging data structures. Any results discrepancy
+algorithm is exactly the same, and the results identical with
+libsvm. The speedup is achieved by keeping kernel in RAM and
+simplifying/rearranging data structures. Any results discrepancy
 compared with libsvm-3.17 is a bug.
 
 
@@ -57,10 +67,10 @@ with small changes in svm_train.java. xsvm.java is the cross_svm version
 of libsvm file svm.java, which contains the main SVM learning code.
 
 
-Performance gain
-----------------
+Comparison of execution times
+-----------------------------
 
-Performance gains on several datasets are shown in Figs. 1-2.
+Figs. 1-2 compare execution times for standard libsvm vs. cross_svm.
 
 CCv1.1 is cancer genomics dataset, with 4 classes, 22215 genomic
 features and 484 samples.
@@ -73,15 +83,15 @@ GSE6532 is cancer genomics dataset with 2 classes, 44754 features and
 
 The other datasets are from UCI repository.
 
-Note that cross_svm is also much faster than liblinear on the three genomic
-datasets we tested. 
+Note that cross_svm is also much faster than liblinear on the three
+genomic datasets that we tested.
 
 
 Compiling cross_svm
 -------------------
 
 You can use the provided cross_svm.jar if you wish to start
-right-away. If you make changes and wish to rebuild, simply type:
+right-away. If you make changes and want to rebuild, type:
 ```
 $ javac *.java
 $ jar cvf cross_svm.jar *.class
