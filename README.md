@@ -72,8 +72,8 @@ Comparison of execution times
 -----------------------------
 
 Figs. 1-2 compare execution times for standard libsvm and liblinear
-command lines (i.e., not using the _-t 4_ precomputed kernel option)
-vs. cross_svm. We used default values of cost and kernel parameters.
+command lines vs. cross_svm. We used default values of cost and kernel
+parameters.
 
 CCv1.1 is cancer genomics dataset, with 4 classes, 22215 genomic
 features and 484 samples.
