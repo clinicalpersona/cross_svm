@@ -37,9 +37,6 @@ subsequently used as needed by the optimization algorithm, offering
 similar cross-validation functionality as cross_svm. However, the
 libsvm approach has a number of disadvantages:
 
-- the _-t 4_ option is relatively obscure. Few users understand
-  how/when/why use it
-
 - it requires external software for translating your source file data
   to libsvm kernel format
 
