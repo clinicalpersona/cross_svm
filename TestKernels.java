@@ -27,7 +27,7 @@ public class TestKernels {
         k2.calculateKernel();
         k2.printKernel();
 
-        kernelDiff(k1.getKernelCopy(), k1.getKernel());
+        kernelDiff(k1.getKernelCopy(), k2.getKernel());
 
         System.out.println();
 
@@ -50,7 +50,7 @@ public class TestKernels {
         k2.calculateKernel();
         k2.printKernel();
 
-        kernelDiff(k1.getKernelCopy(), k1.getKernel());
+        kernelDiff(k1.getKernelCopy(), k2.getKernel());
 
         System.out.println();
     }
@@ -72,7 +72,7 @@ public class TestKernels {
         k2.calculateKernel();
         k2.printKernel();
 
-        kernelDiff(k1.getKernelCopy(), k1.getKernel());
+        kernelDiff(k1.getKernelCopy(), k2.getKernel());
 
         System.out.println();
     }
@@ -93,7 +93,7 @@ public class TestKernels {
         k2.calculateKernel();
         k2.printKernel();
 
-        kernelDiff(k1.getKernelCopy(), k1.getKernel());
+        kernelDiff(k1.getKernelCopy(), k2.getKernel());
 
         System.out.println();
     }
