@@ -37,18 +37,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
@@ -179,13 +168,8 @@ class Kernel extends QMatrix {
 	private double[] x_square;
 
 	// svm_parameter
-	private final int kernel_type;
-	private final int degree;
-	private final double gamma;
-	private final double coef0;
-	private final int problem_type;
-	private final int reuse_dp;
-	
+    svm_parameter param;
+
 	//dummy function
 	float[] get_Q(int column, int len) {
 		throw new RuntimeException("Child class of Kernel must implement methow float[] get_Q(int column, int len)");
@@ -216,67 +200,71 @@ class Kernel extends QMatrix {
 
 	double kernel_function(int i, int j)
 	{
-		switch(kernel_type)
+        if (param.precompute_kernel == 1) {
+            int [] ind =  dp_val_index(x[i][0], x[j][0]);
+            return dp_val[ind[0]][ind[1]];
+        }
+		switch(param.kernel_type)
 		{
 			case svm_parameter.LINEAR:
 				return dot(x[i],x[j]);
 			case svm_parameter.POLY:
-				if (reuse_dp == 1) {
+				if (param.reuse_dp == 1) {
 					int [] ind =  dp_val_index(x[i][0], x[j][0]);
 			    		double val = dp_val[ind[0]][ind[1]];
 			    		if (val != Double.MAX_VALUE) {
 						return val;
 					}
-			    		if (problem_type == 1) {
-			    			val = powi(gamma*dot_full(x[i],x[j])+coef0,degree);
+			    		if (param.problem_type == 1) {
+			    			val = powi(param.gamma*dot_full(x[i],x[j])+param.coef0,param.degree);
 			    		}
 			    		else {
-			    			val = powi(gamma*dot_sparse(x[i],x[j])+coef0,degree); 
+			    			val = powi(param.gamma*dot_sparse(x[i],x[j])+param.coef0,param.degree);
 			    		}
 					dp_val[ind[0]][ind[1]] = val;
 					return val;
 				}
 				else {
-					return powi(gamma*dot(x[i],x[j])+coef0,degree);
+					return powi(param.gamma*dot(x[i],x[j])+param.coef0,param.degree);
 				}
 			case svm_parameter.RBF:
-				if (reuse_dp == 1) {
+				if (param.reuse_dp == 1) {
 					int [] ind =  dp_val_index(x[i][0], x[j][0]);
 			    		double val = dp_val[ind[0]][ind[1]];
 			    		if (val != Double.MAX_VALUE) {
 						return val;
 					}
-			    		if (problem_type == 1) {
-			    			val = Math.exp(-gamma*(x_square[i]+x_square[j]-2*dot_full(x[i], x[j])));
+			    		if (param.problem_type == 1) {
+			    			val = Math.exp(-param.gamma*(x_square[i]+x_square[j]-2*dot_full(x[i], x[j])));
 			    		}
 			    		else {
-			    			val = Math.exp(-gamma*(x_square[i]+x_square[j]-2*dot_sparse(x[i], x[j])));
+			    			val = Math.exp(-param.gamma*(x_square[i]+x_square[j]-2*dot_sparse(x[i], x[j])));
 			    		}
 					dp_val[ind[0]][ind[1]] = val;
 					return val;
 				}
 				else {
-					return Math.exp(-gamma*(x_square[i]+x_square[j]-2*dot(x[i], x[j])));
+					return Math.exp(-param.gamma*(x_square[i]+x_square[j]-2*dot(x[i], x[j])));
 				}
 			
 			case svm_parameter.SIGMOID:
-				if (reuse_dp == 1) {
+				if (param.reuse_dp == 1) {
 					int [] ind =  dp_val_index(x[i][0], x[j][0]);
 			    		double val = dp_val[ind[0]][ind[1]];
 			    		if (val != Double.MAX_VALUE) {
 						return val;
 					}
-			    		if (problem_type == 1) {
-			    			val = Math.tanh(gamma*dot_full(x[i],x[j])+coef0);
+			    		if (param.problem_type == 1) {
+			    			val = Math.tanh(param.gamma*dot_full(x[i],x[j])+param.coef0);
 			    		}
 			    		else {
-			    			val = Math.tanh(gamma*dot_sparse(x[i],x[j])+coef0); 
+			    			val = Math.tanh(param.gamma*dot_sparse(x[i],x[j])+param.coef0);
 			    		}
 					dp_val[ind[0]][ind[1]] = val;
 					return val;
 				}
 				else {
-					return Math.tanh(gamma*dot(x[i],x[j])+coef0);
+					return Math.tanh(param.gamma*dot(x[i],x[j])+param.coef0);
 				}
 			case svm_parameter.PRECOMPUTED:
 				return x[i][(int)(x[j][0])];
@@ -305,22 +293,17 @@ class Kernel extends QMatrix {
 	
 	//Kernel(int l, svm_node[][] x_, svm_parameter param)
 	Kernel(int l, double[][] x_, svm_parameter param, double [][] dp_val) {
-		this.kernel_type = param.kernel_type;
-		this.degree = param.degree;
-		this.gamma = param.gamma;
-		this.coef0 = param.coef0;
+        this.param = param;
 		this.dp_val = dp_val;
-		this.problem_type = param.problem_type;
-		this.reuse_dp = param.reuse_dp;
 
 		//x = (svm_node[][])x_.clone();
 		x = (double[][])x_.clone();
 
                 if (l > 0) {
-                    if(kernel_type == svm_parameter.RBF) {
+                    if(param.kernel_type == svm_parameter.RBF) {
 			x_square = new double[l];
 			for(int i=0;i<l;i++) {
-				if (problem_type == 1)  { 
+				if (param.problem_type == 1)  {
 					x_square[i] = dot_full(x[i],x[i]);
 				}
 				else {
@@ -334,7 +317,7 @@ class Kernel extends QMatrix {
                 }
 	}
 
-	static double dot_full(double[] x, double[] y) {
+	public static double dot_full(double[] x, double[] y) {
 		double sum = 0;
 		for (int i = 1; i < x.length; ++i) {
 			sum += x[i] * y[i];
@@ -367,7 +350,7 @@ class Kernel extends QMatrix {
 		return ind;
 	}
 	
-	static double dot_sparse(double[] x, double[] y) {
+	public static double dot_sparse(double[] x, double[] y) {
 		double sum = 0;
 		
 		int xlen = x.length;
@@ -404,8 +387,8 @@ class Kernel extends QMatrix {
 	}
 
 	double dot(double[] x, double[] y) {
-		if (problem_type == 1)  { 
-			if (reuse_dp == 1)  {
+		if (param.problem_type == 1)  {
+			if (param.reuse_dp == 1)  {
 				return dot_full_reuse(x, y);
 			}
 			else {
@@ -413,7 +396,7 @@ class Kernel extends QMatrix {
 			}
 		}
 		else {
-			if (reuse_dp == 1) {
+			if (param.reuse_dp == 1) {
 				return dot_sparse_reuse(x, y);
 			}
 			else {
@@ -424,6 +407,10 @@ class Kernel extends QMatrix {
 
 	//static double k_function(svm_node[] x, svm_node[] y, svm_parameter param)
 	double k_function(double[] x, double[] y, svm_parameter param) {
+        if (param.precompute_kernel == 1) {
+            int [] ind =  dp_val_index(x[0], y[0]);
+            return dp_val[ind[0]][ind[1]];
+        }
 		switch(param.kernel_type) {
 			case svm_parameter.LINEAR:
 				return dot(x,y);
@@ -434,14 +421,14 @@ class Kernel extends QMatrix {
 			case svm_parameter.SIGMOID:
 				return k_function_sigmoid(x, y, param);
 			case svm_parameter.PRECOMPUTED:
-                            return x[(int) y[0]];
+                return x[(int) y[0]];
 			default:
 				return 0;       // java
 		}
 	}
 
 	double k_function_poly(double[] x, double[] y, svm_parameter param) {
-		if (reuse_dp == 1) {
+		if (param.reuse_dp == 1) {
 			int [] ind =  dp_val_index(x[0], y[0]);
 		  	double val = dp_val[ind[0]][ind[1]];
 		 	if (val != Double.MAX_VALUE) {
@@ -462,7 +449,7 @@ class Kernel extends QMatrix {
 	}
 
 	double k_function_sigmoid(double[] x, double[] y, svm_parameter param) {
-		if (reuse_dp == 1) {
+		if (param.reuse_dp == 1) {
 			int [] ind =  dp_val_index(x[0], y[0]);
 		  	double val = dp_val[ind[0]][ind[1]];
 		 	if (val != Double.MAX_VALUE) {
@@ -484,7 +471,7 @@ class Kernel extends QMatrix {
 
 	private double k_function_rbf(double [] x, double [] y, svm_parameter param) {
 		if (param.problem_type == 1) {
-			if (reuse_dp == 1) {
+			if (param.reuse_dp == 1) {
 				return k_function_rbf_full_reuse(x, y, param);
 			}
 			else {
@@ -492,7 +479,7 @@ class Kernel extends QMatrix {
 			}
 		}
 		else {
-			if (reuse_dp == 1) {
+			if (param.reuse_dp == 1) {
 				return k_function_rbf_sparse_reuse(x, y, param);
 			}
 			else {
@@ -2799,7 +2786,7 @@ public class xsvm {
 			fp.writeBytes("degree "+param.degree+"\n");
 
 		if(param.kernel_type == svm_parameter.POLY ||
-		   param.kernel_type == svm_parameter.RBF ||
+				param.kernel_type == svm_parameter.RBF ||
 		   param.kernel_type == svm_parameter.SIGMOID)
 			fp.writeBytes("gamma "+param.gamma+"\n");
 
@@ -2862,10 +2849,7 @@ public class xsvm {
 				fp.writeBytes(sv_coef[j][i]+" ");
 
 			double[] p = SV[i];
-			if (param.precompute_dp == 1) {
-				fp.writeBytes(":" + (int)(p[0]+1));
-			}
-			else if (param.problem_type == 1) { //full			
+			if (param.problem_type == 1) { //full
 				for(int j=1;j<p.length;j++) {
 					if (p[j] != 0) {
 						fp.writeBytes((j)+":"+p[j]+" ");
@@ -3053,10 +3037,11 @@ public class xsvm {
 	
 		int kernel_type = param.kernel_type;
 		if(kernel_type != svm_parameter.LINEAR &&
-		   kernel_type != svm_parameter.POLY &&
-		   kernel_type != svm_parameter.RBF &&
-		   kernel_type != svm_parameter.SIGMOID &&
-		   kernel_type != svm_parameter.PRECOMPUTED) {
+                kernel_type != svm_parameter.POLY &&
+                kernel_type != svm_parameter.RBF &&
+                kernel_type != svm_parameter.SIGMOID &&
+                kernel_type != svm_parameter.PRECOMPUTED
+                ) {
                     return "unknown kernel type";
 		}
 
@@ -3188,61 +3173,42 @@ public class xsvm {
 			++n;
 		}
 	}
-	
-	public double [][] getDpVal() {
-		return dp_val;
+
+	public void precalculate_kernel(svm_problem prob, svm_parameter param) throws Exception {
+		int[] index = new int[prob.num_features];
+		for (int i = 0; i < prob.num_features; ++i) {
+			index[i] = i;
+		}
+		if (param.kernel_type == svm_parameter.LINEAR) {
+			LinearKernel k = new LinearKernel(prob.x);
+			k.addFeature(index, param.problem_type);
+			k.calculateKernel();
+			dp_val = k.getKernel();
+		}
+		else if (param.kernel_type == svm_parameter.RBF) {
+			RbfKernel k = new RbfKernel(prob.x, param.gamma);
+			k.addFeature(index, param.problem_type);
+			k.calculateKernel();
+			dp_val = k.getKernel();
+		}
+		else if (param.kernel_type == svm_parameter.POLY) {
+			PolyKernel k = new PolyKernel(prob.x, param.gamma, param.coef0, param.degree);
+			k.addFeature(index, param.problem_type);
+			k.calculateKernel();
+			dp_val = k.getKernel();
+		}
+		else if (param.kernel_type == svm_parameter.SIGMOID) {
+			SigmoidKernel k = new SigmoidKernel(prob.x, param.gamma, param.coef0);
+			k.addFeature(index, param.problem_type);
+			k.calculateKernel();
+			dp_val = k.getKernel();
+		}
+		else {
+            throw new Exception("Unsupportrd Kernel");
+		}
 	}
-	
-	public double [][] precompute_dp_val(int n, int num_features, svm_parameter param, String input_file_name) throws IOException, ClassNotFoundException {
-		System.out.println("Start precompute");
-		long startTime = System.currentTimeMillis();
-		dp_val = new double[n][];
-		for (int i = 0; i < n; ++i) {
-			dp_val[i] = new double[i+1];
-		}
-		String xSerializedFile = "supersvm_problem.ser";
-		create_serialized_model(num_features, param.problem_type, input_file_name, xSerializedFile);
-		
-		ObjectInputStream in = null;
-		try {
-			int chunkSize = 520;
-			int numChunks = n / chunkSize;
-			if (numChunks * chunkSize != n) {
-				++numChunks;
-			}
-			
-			for (int i = 0; i < numChunks; ++i) {
-				long s1 = System.currentTimeMillis();
-				in = new ObjectInputStream(new FileInputStream(xSerializedFile));
-				for (int k = 0; k < i; ++k) {
-					getChunk(chunkSize, in, true); 
-				}
-				long s2 = System.currentTimeMillis();
-				ArrayList<double[]> c1 = getChunk(chunkSize, in, false);
-				chunk_dp(c1, c1, param.problem_type, param.kernel_type);
-				long e2 = System.currentTimeMillis()- s2;
-				System.out.println("part " + i + " " + i + " " + (double)e2 / 1000 + " s");
-				
-				for (int j = (i + 1); j < numChunks; ++j) {
-					//System.out.println("x "+i+" "+j);
-					long s3 = System.currentTimeMillis();
-					ArrayList<double[]> c2 =  getChunk(chunkSize, in, false);
-					chunk_dp(c1, c2, param.problem_type, param.kernel_type);
-					long e3 = System.currentTimeMillis()- s3;
-					System.out.println("parts " + i + " " +j + " "+ (double)e3 / 1000 + " s");
-				}
-				in.close();
-				long e1 = System.currentTimeMillis()- s1;
-				System.out.println("part " + i + " " + (double)e1 / 1000 + " s");
-			}
-		}
-		finally {
-			File file = new File(xSerializedFile);
-    		file.delete();
-			in.close();
-		}
-		long exeTime = System.currentTimeMillis()- startTime;
-		System.out.println("Precompute time " + (double)exeTime / 1000 + " s");
+
+	public double [][] getDpVal() {
 		return dp_val;
 	}
 	
@@ -3395,12 +3361,7 @@ public class xsvm {
 	
 	// read in a problem (in svmlight format)
 	public static svm_problem read_problem(String input_file_name, svm_parameter param) throws IOException {
-		if (param.precompute_dp == 1) {
-			return read_partial_problem(input_file_name, param);
-		}
-		else {
-			return read_full_problem(input_file_name, param);
-		}
+		return read_full_problem(input_file_name, param);
 	}
 	
 	private static svm_problem read_partial_problem(String input_file_name, svm_parameter param) throws IOException {

@@ -1,7 +1,5 @@
 
 
-import java.io.IOException;
-
 class svm_train {
 	private svm_parameter param;		// set by parse_command_line
 	private svm_problem prob;		// set by read_problem
@@ -44,12 +42,14 @@ class svm_train {
                              +"-e epsilon : set tolerance of termination criterion (default 0.001)\n"
                              +"-h shrinking : whether to use the shrinking heuristics, 0 or 1 (default 1)\n"
                              +"-b probability_estimates : whether to train a SVC or SVR model for probability estimates, 0 or 1 (default 0)\n"
-                             +"-wi weight : set the parameter C of class i to weight*C, for C-SVC (default 1)\n"
+                             +"-w weight : set the parameter C of class i to weight*C, for C-SVC (default 1)\n"
                              +"-v n : n-fold cross validation mode\n"
                              +"-q : quiet mode (no outputs)\n"
                              +"-f problem_type : sparse (0) or full (1) (default 0)\n"
                              +"-u reuse : in cross-validation, compute dot products exactly once, yes (1) or no (0) (default 0)\n"
-                             );
+							 +"-o precompute kernal matrix, yes (1) or no (0) (default 0)\n"
+
+			);
             System.exit(1);
 	}
 
@@ -91,10 +91,15 @@ class svm_train {
 		}
 	}
 	
-	private void run(String argv[]) throws IOException, ClassNotFoundException
+	private void run(String argv[]) throws Exception
 	{	
 		parse_command_line(argv);
+
+        long dt1 = System.currentTimeMillis();
 		prob = xsvm.read_problem(input_file_name, param);
+        dt1 = System.currentTimeMillis() - dt1;
+        System.out.println("Model load time: " + + dt1/1000.0 + "s");
+
 		error_msg = xsvm.svm_check_parameter(prob, param);
 		if(error_msg != null)
 		{
@@ -104,13 +109,13 @@ class svm_train {
 		
 		xsvm svm = new xsvm();
 		svm.svm_set_print_string_function(param.print_func);
-		
-		if (param.precompute_dp == 1) {
-			String fName = "/home/persona/artritis/ra_dp_all.ser";
-			//svm.load_dp_val(fName);
-			double [][] dp_val = svm.precompute_dp_val(prob.l, prob.num_features, param, input_file_name);
-			xsvm.save_dp_val(dp_val, fName);
-		}
+
+        if (param.precompute_kernel == 1) {
+            long dt2 = System.currentTimeMillis();
+            svm.precalculate_kernel(prob, param);
+            dt2 = System.currentTimeMillis() - dt2;
+            System.out.println("Precompute execution time: " + + dt2/1000.0 + "s");
+        }
 		else if (param.reuse_dp == 1) {
 			svm.init_dp_val(prob.l);
 		}
@@ -119,12 +124,12 @@ class svm_train {
 			do_cross_validation(svm);
 		}
 		else {
-			model = svm.svm_train(prob,param);
+			model = svm.svm_train(prob, param);
 			svm.svm_save_model(model_file_name,model);
 		}
 	}
 
-	public static void main(String argv[]) throws IOException, ClassNotFoundException
+	public static void main(String argv[]) throws Exception, ClassNotFoundException
 	{
 		long startTime = System.currentTimeMillis();
 		svm_train t = new svm_train();
@@ -165,9 +170,9 @@ class svm_train {
 		param.weight = new double[0];
 		param.problem_type = 0; // sparse
 		param.reuse_dp = 0; //don't save
-		param.precompute_dp = 0; //don't precompute
 		cross_validation = 0;
 		param.print_func = null;	// default printing to stdout
+		param.precompute_kernel = 0; //don't precompute
 
 		// parse options
 		for(i=0;i<argv.length;i++)
@@ -254,29 +259,15 @@ class svm_train {
 						exit_with_help();
 					break;
 				case 'o':
-					param.precompute_dp = atoi(argv[i]);
-					//if (param.precompute_dp != 0 && param.precompute_dp != 1)
-					//	exit_with_help();
+					param.precompute_kernel = 1;
 					break;
 				default:
 					System.err.print("Unknown option: " + argv[i-1] + "\n");
 					exit_with_help();
 			}
-                        //
-                        // ljb: precompute_dp disabled as of
-                        // 11/19/14. Not ready for releasing to users.
-                        //
-                        param.precompute_dp = 0;
-			if (param.precompute_dp == 1) {
-				param.reuse_dp = 1;
-			}
-                        //
-                        // In precomputed mode (-t 4), sparse makes no
-                        // sense. Force full problem type.
-                        //
 			if (param.kernel_type == 4) {
-                            param.problem_type = 1;
-                        }
+				param.problem_type = 1;
+			}
 		}
 		
 		// determine filenames

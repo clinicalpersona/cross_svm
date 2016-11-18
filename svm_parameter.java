@@ -37,8 +37,8 @@ public class svm_parameter implements Cloneable,java.io.Serializable
 	public static final int FULL_PROBLEM = 1;
 	public static final int SPARSE_PROBLEM = 0;
 	public int problem_type; // 0 sparse, 1 full
-	public int reuse_dp; // 0 don't reuse dot product, 1 reuse 
-	public int precompute_dp; // 0 don't precompute dot product, 1 precompute 
+	public int reuse_dp; // 0 don't reuse dot product, 1 reuse
+	public int precompute_kernel; // 0 don't precompute, 1 precompute
 	public svm_print_interface print_func;
 
 	public Object clone() 
