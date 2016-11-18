@@ -47,7 +47,7 @@ class svm_train {
                              +"-q : quiet mode (no outputs)\n"
                              +"-f problem_type : sparse (0) or full (1) (default 0)\n"
                              +"-u reuse : in cross-validation, compute dot products exactly once, yes (1) or no (0) (default 0)\n"
-							 +"-o precompute kernal matrix, yes (1) or no (0) (default 0)\n"
+							 +"-o precompute kernel matrix, yes (1) or no (0) (default 0)\n"
 
 			);
             System.exit(1);
